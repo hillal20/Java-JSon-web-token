@@ -13,6 +13,8 @@ import java.util.ArrayList;
 public class MyUserDetailService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
+
+        // hard coding the user instead of fetching it from the db
         return new User("foo","foo", new ArrayList<>());
     }
 }

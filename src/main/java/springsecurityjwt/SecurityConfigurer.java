@@ -8,8 +8,12 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import springsecurityjwt.Filters.JwtFilter;
+import springsecurityjwt.JwtUtils.JwtUtils;
 import springsecurityjwt.Services.MyUserDetailService;
 
 
@@ -19,25 +23,34 @@ public class SecurityConfigurer extends WebSecurityConfigurerAdapter {
 
 
     @Override
-    @Bean
+    @Bean  // this is doing nothing just adapting with the version of java
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
     }
 
-    @Autowired
+
+    @Autowired // fetching the user from the db
     private MyUserDetailService myUserDetailService;
 
+    @Autowired
+    JwtFilter jwtFilter;
 
-    @Override
+    @Override // authenticating the user
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
              auth.userDetailsService(myUserDetailService);
     }
 
-    @Override
+    @Override // authorizing the end point
     protected void configure(HttpSecurity auto) throws Exception {
          auto.csrf().disable()
                  .authorizeRequests().antMatchers("/authenticate")
-                 .permitAll().anyRequest().authenticated();
+                 .permitAll().anyRequest().authenticated()
+                ///  telling spring do not create sessions
+                .and()
+                 .sessionManagement()
+                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+         // applying the jwtFilter and
+           auto.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
     }
 
     @Bean

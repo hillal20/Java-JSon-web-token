@@ -9,10 +9,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import springsecurityjwt.JwtUtils.JwtUtils;
 import springsecurityjwt.Models.AuthenticationRequestModel;
 import springsecurityjwt.Models.AuthenticationResponseModel;
@@ -33,7 +30,7 @@ public class HelloResourceController {
     private MyUserDetailService  myUserDetailService;
 
 
-    @RequestMapping("/hello")
+    @GetMapping("/hello")
     public String getHello(){
        return"hello Word";
 
@@ -43,17 +40,22 @@ public class HelloResourceController {
     public ResponseEntity<?> getAuthenticated(@RequestBody AuthenticationRequestModel requestBody ) throws Exception {
         System.out.println(" request body ==> " +  requestBody);
      try{
-
-         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(requestBody.getUserName(), requestBody.getPassword()));
+         // checking if the user exist or not via the manager by using the token
+         UsernamePasswordAuthenticationToken userToken = new UsernamePasswordAuthenticationToken(  // creating spring security token
+                 requestBody.getUserName(),
+                 requestBody.getPassword()
+         );
+         authenticationManager.authenticate(userToken);
 
      }catch(BadCredentialsException err){
          throw new Exception(" == INCORRECT USER NAME OR PASSWORD ==  ",  err);
      }
 
-
+     // we generate the token after the authorization is being processed in the try loop
      final UserDetails  userDetails = myUserDetailService.loadUserByUsername(requestBody.getUserName());
      final String  jwt = jwtUtils.generateToken(userDetails);
 
+     // sending the token
        return new ResponseEntity<>(new AuthenticationResponseModel(jwt).getJwt() , HttpStatus.OK);
     }
 
